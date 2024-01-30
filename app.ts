@@ -11,7 +11,6 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 
 app.get("/", (req, res) => {
-    console.log("/index.html")
     res.sendFile(__dirname + "/index.html");
 });
 
