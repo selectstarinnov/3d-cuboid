@@ -2808,13 +2808,15 @@ function mouseDownLogic(ev) {
             }
 
         } else if (ev.button === 2) {
-            // rightclick
-            clickedObjectIndex = labelTool.cubeArray[labelTool.currentFileIndex].indexOf(clickedObjects[0].object);
-            let bboxClass = annotationObjects.contents[labelTool.currentFileIndex][clickedObjectIndex]["class"];
-            let trackId = annotationObjects.contents[labelTool.currentFileIndex][clickedObjectIndex]["trackId"];
-            deleteObject(bboxClass, trackId, clickedObjectIndex);
-            // move button to left
-            $("#left-btn").css("left", 0);
+            /**
+             * 우클릭으로 생성된 Object를 삭제한다.
+             * * 해당기능이 작업자들의 실수를 많이 일으켜서 삭제하도록 한다.
+             */
+            // clickedObjectIndex = labelTool.cubeArray[labelTool.currentFileIndex].indexOf(clickedObjects[0].object);
+            // let bboxClass = annotationObjects.contents[labelTool.currentFileIndex][clickedObjectIndex]["class"];
+            // let trackId = annotationObjects.contents[labelTool.currentFileIndex][clickedObjectIndex]["trackId"];
+            // deleteObject(bboxClass, trackId, clickedObjectIndex);
+            // $("#left-btn").css("left", 0);
         }//end right click
     } else {
         for (let i = 0; i < annotationObjects.contents[labelTool.currentFileIndex].length; i++) {

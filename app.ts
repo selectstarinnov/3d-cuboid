@@ -27,7 +27,6 @@ app.post("/save", (req, res) => {
 });
 
 app.get("/frames", (req, res) => {
-    const fileBody = req.body;
     const {dataset, sequence} = req.query;
     const path = `${__dirname}/input/${dataset}/${sequence}/annotations`;
     let dir = fs.readdirSync(path);

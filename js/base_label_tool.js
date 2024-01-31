@@ -1061,8 +1061,7 @@ let labelTool = {
         labelTool.classColors = labelTool.dataStructure.datasets[0].class_colors;
         labelTool.targetClass = labelTool.classes[0];
     },
-    setFileNames() {
-        let fileNameArray = [];
+    setNumFrames() {
         let xhr = new XMLHttpRequest();
         let api = `/frames?dataset=${labelTool.currentDataset}&sequence=${labelTool.sequence}`;
         xhr.open('GET', api, false);
@@ -1072,16 +1071,17 @@ let labelTool = {
             var response = JSON.parse(xhr.responseText); // 서버에서 받은 응답 데이터
             labelTool.numFrames = response.frames;
         } else {
-            // 오류 처리
             labelTool.numFrames = 0;
-            console.error("Error during the request");
         }
+    },
+    setFileNames() {
+        let fileNameArray = [];
+        this.setNumFrames();
         for (let i = 0; i < labelTool.numFrames; i++) {
             fileNameArray.push(pad(i, 6))
         }
         labelTool.fileNames = fileNameArray;
     },
-
     previousFrame: function () {
         if (this.currentFileIndex >= this.skipFrameCount) {
             this.changeFrame(this.currentFileIndex - this.skipFrameCount);
@@ -1536,7 +1536,6 @@ let labelTool = {
             }
         }
     },
-
     handlePressKey: function (code, value) {
         if (code === 13) {
             this.jumpFrame();
