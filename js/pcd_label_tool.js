@@ -4,6 +4,21 @@ let canvasFrontView;
 let views;
 let grid;
 
+/**
+ * type: enum(string) // CREATE_BOX, UPDATE_BOX_CATEGORY, UPDATE_BOX_PROPERTY
+ * @type {*[
+ *     {
+ *         type: string,
+ *         id: string,
+ *         originValue: ?,
+ *         currentValue: ?
+ *     }
+ * ]}
+ * @type if(신규 패널 생성) currentValue {
+ *      currentIndex: integer,
+ *      currentObject: {}
+ * }
+ */
 let operationStack = [];
 
 let perspectiveCamera;
@@ -305,6 +320,10 @@ function undoOperation() {
 
     // TODO: implement undo operations of all cases
     switch (lastOperationType) {
+        case "CREATE_BOX":
+            let {currentIndex, currentObject} = lastOperation['currentValue'];
+            handleDeleteObject(currentIndex, currentObject)
+            break;
         case "classLabel":
             let objectIndex = Number(lastOperation["objectIndex"]);
             let previousClassLabel = lastOperation["previousClass"];
@@ -1436,6 +1455,13 @@ function keyUpHandler(event) {
 }
 
 function keyDownHandler(event) {
+    /**
+     * 글로벌 Shortcut EVENT
+     */
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        console.log("undo")
+        undoOperation(); // undoOperation 함수 호출
+    }
     if (labelTool.selectedMesh !== undefined) {
         switch (event.keyCode) {
             case 17: // Ctrl
@@ -2384,6 +2410,10 @@ function enableInterpolationBtn() {
     $(interpolateBtn.domElement.firstChild).removeAttr("tabIndex");
 }
 
+/**
+ * 마우스 클릭을 땔 경우, 해당 영역만큼 3D Panel 을 생성함.
+ * @param ev
+ */
 function mouseUpLogic(ev) {
     dragControls = false;
     // check if scene contains transform controls
@@ -2427,8 +2457,13 @@ function mouseUpLogic(ev) {
             }
         }
 
+        /**
+         * Panel 클릭 또는 Panel 생성
+         */
         if (clickedObjects.length > 0 && clickedObjectIndex !== -1) {
-            // open folder of selected object
+            /**
+             * Panel 클릭시 발생하는 MouseUp Event
+             */
             annotationObjects.localOnSelect["PCD"](clickedObjectIndex);
             // set selected object
 
@@ -2536,6 +2571,9 @@ function mouseUpLogic(ev) {
 
 
         } else {
+            /**
+             * Panel 신규 생성 MouseUp Event
+             */
             if (labelTool.pointCloudOnlyAnnotation === false) {
                 // remove selection in camera view if 2d label exist
                 for (let i = 0; i < annotationObjects.contents[labelTool.currentFileIndex].length; i++) {
@@ -2598,6 +2636,9 @@ function mouseUpLogic(ev) {
             clickedObjectIndexPrevious = annotationObjects.__selectionIndexCurrentFrame;
             clickFlag = false;
         } else if (groundPlaneArray.length === 1 && birdsEyeViewFlag === true && useTransformControls === false) {
+            /**
+             * Panel 생성 시작.
+             */
             let groundUpObject = ray.intersectObjects(groundPlaneArray);
             if (groundUpObject === undefined || groundUpObject[0] === undefined) {
                 return;
@@ -2729,14 +2770,30 @@ function mouseUpLogic(ev) {
                 if (interpolationMode === true) {
                     interpolationObjIndexCurrentFile = insertIndex;
                 }
+                // let currentObject = annotationObjects.contents.get(annotationObjects.__insertIndex);
+                if(labelTool.currentFileIndex !== undefined && labelTool.selectedMesh !== undefined){
+                    setOperationStackItem({
+                        type: 'CREATE_BOX',
+                        id: '',
+                        originValue: {},
+                        currentValue: {
+                            currentIndex: labelTool.currentFileIndex,
+                            currentObject: labelTool.selectedMesh
+                        }
+                    })
+                }else {
+                    console.log('create error!!!')
+                }
 
             }
             groundPlaneArray = [];
         }
-
     }
 }
 
+/**
+ * 새로운 3D Panel 을 생성하기 위해 마우스 클릭 Down 부터 Up 까지 로직을 수행.
+ */
 function handleMouseUp(ev) {
     if (rendererBev === undefined) {
         mouseUpLogic(ev);
@@ -2775,7 +2832,6 @@ function mouseDownLogic(ev) {
     });
     let groundPlane = new THREE.Mesh(geometry, material);
     if (clickedObjects.length > 0) {
-
         if (ev.button === 0) {
             clickedObjectIndex = labelTool.cubeArray[labelTool.currentFileIndex].indexOf(clickedObjects[0].object);
             clickFlag = true;
@@ -2835,6 +2891,19 @@ function mouseDownLogic(ev) {
             }
         }
     }
+}
+
+function setOperationStackItem({type, id, originValue, currentValue}){
+    operationStack = [
+        ...operationStack,
+        {type, id, originValue, currentValue}
+    ]
+}
+function handleDeleteObject(currentIndex, currentObject){
+    clickedObjectIndex = labelTool.cubeArray[currentIndex].indexOf(currentObject);
+    let bboxClass = annotationObjects.contents[currentIndex][clickedObjectIndex]["class"];
+    let trackId = annotationObjects.contents[currentIndex][clickedObjectIndex]["trackId"];
+    deleteObject(bboxClass, trackId, clickedObjectIndex);
 }
 
 function handleMouseDown(ev) {

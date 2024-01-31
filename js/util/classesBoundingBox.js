@@ -17,7 +17,7 @@ let classesBoundingBox = {
                 "previousClass": annotationObjects.contents[labelTool.currentFileIndex][annotationObjects.__selectionIndexCurrentFrame]["class"],
                 "currentClass": label
             };
-            operationStack.push(changeClassOperation);
+            // operationStack.push(changeClassOperation);
         }
         this.currentClass = label;
     },
