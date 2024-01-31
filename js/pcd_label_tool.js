@@ -2059,7 +2059,6 @@ function changeSequence(sequence) {
 
 function readPointCloud() {
     let rawFile = new XMLHttpRequest();
-    console.log('ss')
     try {
         if (labelTool.showOriginalNuScenesLabels === true) {
             rawFile.open("GET", 'input/' + labelTool.currentDataset + '/pointclouds/' + pad(labelTool.currentFileIndex, 6) + '.pcd', false);
@@ -3267,13 +3266,9 @@ function init() {
         showOriginalNuScenesLabelsCheckbox.onChange(function (value) {
             labelTool.showOriginalNuScenesLabels = value;
             if (labelTool.showOriginalNuScenesLabels === true) {
-                // TODO: improve:
-                // - do not reset
-                // - show current labels and in addition nuscenes labels
                 labelTool.reset();
                 labelTool.start();
             } else {
-                // TODO: hide nuscenes labels (do not reset)
                 labelTool.reset();
                 labelTool.start();
             }
@@ -3288,12 +3283,19 @@ function init() {
         let currentDatasetDropDownController = guiOptions.add(labelTool, 'currentDataset', labelTool.datasetArray).name("Choose dataset")
             .onChange(function (value) {
                 changeDataset(value);
-                chooseSequenceDropDownController = chooseSequenceDropDownController.options(labelTool.dataStructure.datasets[labelTool.currentDatasetIdx].sequences);
+                let sequences = labelTool.dataStructure.datasets[labelTool.currentDatasetIdx].sequences;
+                chooseSequenceDropDownController = chooseSequenceDropDownController
+                    .options(labelTool.dataStructure.datasets[labelTool.currentDatasetIdx].sequences)
+                    .onChange(function (value) {
+                        changeSequence(value);
+                        hideMasterView();
+                    });
                 let allCheckboxes = $(":checkbox");
                 let showNuScenesLabelsCheckbox = allCheckboxes[0];
-                if (value === labelTool.datasets.NuScenes) {
-                    enableShowNuscenesLabelsCheckbox(showNuScenesLabelsCheckbox);
-                }
+                // if (value === labelTool.datasets.NuScenes) {
+                //     enableShowNuscenesLabelsCheckbox(showNuScenesLabelsCheckbox);
+                // }
+                enableShowNuscenesLabelsCheckbox(showNuScenesLabelsCheckbox);
                 hideMasterView();
             });
 

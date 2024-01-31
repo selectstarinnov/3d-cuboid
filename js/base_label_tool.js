@@ -145,6 +145,7 @@ let labelTool = {
     positionLidarNuscenes: [0.891067, 0.0, 1.84292],//(long, lat, vert)
     positionLidar: [0.0, 0.0, 6.9],//(long, lat, vert)
     translationVectorLidarToCamFront: [0.77, -0.02, -0.3],
+    // Annotation Panel 을 보여줄지 선택하는 property / Controls.NuscenesLabels Checkbox
     showOriginalNuScenesLabels: false,
     imageAspectRatioNuScenes: 1.777777778,
     showFieldOfView: false,
@@ -859,11 +860,28 @@ let labelTool = {
         }
         this.setPanelSize(labelTool.currentFileIndex);
     },
-
     loadAnnotations() {
         let fileName;
         annotationObjects.clear();
-        if (labelTool.currentDataset === labelTool.datasets.NuScenes) {
+        if (labelTool.currentDataset === labelTool.datasets.providentia) {
+            // TODO: load all available file names
+            for (let i = 0; i < labelTool.fileNames.length; i++) {
+                fileName = labelTool.fileNames[i];
+                request({
+                    url: '/label/annotations/',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        file_name: fileName
+                    },
+                    success: function (res) {
+                        this.loadFrameAnnotationsProvidentiaJSON(res);
+                    }.bind(this),
+                    error: function (res) {
+                    }.bind(this)
+                });
+            }
+        }else {
             if (labelTool.showOriginalNuScenesLabels === true) {
                 for (let i = 0; i < this.fileNames.length; i++) {
                     fileName = this.fileNames[i] + ".json";
@@ -898,24 +916,6 @@ let labelTool = {
                         }.bind(this)
                     });
                 }
-            }
-        } else if (labelTool.currentDataset === labelTool.datasets.providentia) {
-            // TODO: load all available file names
-            for (let i = 0; i < labelTool.fileNames.length; i++) {
-                fileName = labelTool.fileNames[i];
-                request({
-                    url: '/label/annotations/',
-                    type: 'GET',
-                    dataType: 'json',
-                    data: {
-                        file_name: fileName
-                    },
-                    success: function (res) {
-                        this.loadFrameAnnotationsProvidentiaJSON(res);
-                    }.bind(this),
-                    error: function (res) {
-                    }.bind(this)
-                });
             }
         }
     },
@@ -1063,17 +1063,21 @@ let labelTool = {
     },
     setFileNames() {
         let fileNameArray = [];
-        if (labelTool.currentDataset === labelTool.datasets.NuScenes) {
-            labelTool.numFrames = labelTool.numFramesNuScenes;
-            for (let i = 0; i < labelTool.numFrames; i++) {
-                fileNameArray.push(pad(i, 6))
-            }
-
-        } else if (labelTool.currentDataset === labelTool.datasets.providentia) {
-            labelTool.numFrames = labelTool.numFramesProvidentia;
-            for (let i = 0; i < labelTool.numFrames; i++) {
-                fileNameArray.push(pad(i, 6))
-            }
+        let xhr = new XMLHttpRequest();
+        let api = `/frames?dataset=${labelTool.currentDataset}&sequence=${labelTool.sequence}`;
+        xhr.open('GET', api, false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send();
+        if (xhr.status === 200) {
+            var response = JSON.parse(xhr.responseText); // 서버에서 받은 응답 데이터
+            labelTool.numFrames = response.frames;
+        } else {
+            // 오류 처리
+            labelTool.numFrames = 0;
+            console.error("Error during the request");
+        }
+        for (let i = 0; i < labelTool.numFrames; i++) {
+            fileNameArray.push(pad(i, 6))
         }
         labelTool.fileNames = fileNameArray;
     },

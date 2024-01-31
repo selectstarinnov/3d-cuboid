@@ -25,6 +25,21 @@ app.post("/save", (req, res) => {
         ok: 'success'
     })
 });
+
+app.get("/frames", (req, res) => {
+    const fileBody = req.body;
+    const {dataset, sequence} = req.query;
+    const path = `${__dirname}/input/${dataset}/${sequence}/annotations`;
+    let dir = fs.readdirSync(path);
+    let fileCount = 0;
+    dir.forEach(item => {
+        fileCount++;
+    })
+    res.send({
+        frames: fileCount
+    })
+});
+
 const PORT = 80;
 app.listen(PORT, () => {
     console.log(`start! express server on port ${PORT}`)
