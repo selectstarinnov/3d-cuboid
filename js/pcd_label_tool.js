@@ -20,6 +20,7 @@ let grid;
  * }
  */
 let operationStack = [];
+const maxOperationNum = 50;
 
 let perspectiveCamera;
 let currentCamera;
@@ -2898,6 +2899,9 @@ function setOperationStackItem({type, id, originValue, currentValue}){
         ...operationStack,
         {type, id, originValue, currentValue}
     ]
+    if(operationStack.length > maxOperationNum){
+        operationStack.shift();
+    }
 }
 function handleDeleteObject(currentIndex, currentObject){
     clickedObjectIndex = labelTool.cubeArray[currentIndex].indexOf(currentObject);
