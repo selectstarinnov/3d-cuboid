@@ -11,12 +11,15 @@ let classesBoundingBox = {
         }
 
         if (annotationObjects.__selectionIndexCurrentFrame !== -1) {
+            let previousClassLabel = annotationObjects.contents[labelTool.currentFileIndex][annotationObjects.__selectionIndexCurrentFrame]["prev_class"];
             let changeClassOperation = {
                 "type": "classLabel",
                 "objectIndex": annotationObjects.__selectionIndexCurrentFrame,
-                "previousClass": annotationObjects.contents[labelTool.currentFileIndex][annotationObjects.__selectionIndexCurrentFrame]["class"],
-                "currentClass": label
+                "previousClass": previousClassLabel,
+                "currentClass": label,
+                "selectedMesh": labelTool.selectedMesh
             };
+            operationStack.push(changeClassOperation);
         }
         this.currentClass = label;
     },

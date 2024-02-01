@@ -282,6 +282,7 @@ function interpolate() {
     annotationObjects.contents[labelTool.currentFileIndex][interpolationObjIndexCurrentFile]["interpolationStart"]["size"]["y"] = annotationObjects.contents[labelTool.currentFileIndex][interpolationObjIndexCurrentFile]["interpolationEnd"]["size"]["y"];
     annotationObjects.contents[labelTool.currentFileIndex][interpolationObjIndexCurrentFile]["interpolationStart"]["size"]["z"] = annotationObjects.contents[labelTool.currentFileIndex][interpolationObjIndexCurrentFile]["interpolationEnd"]["size"]["z"];
     annotationObjects.contents[labelTool.currentFileIndex][interpolationObjIndexCurrentFile]["interpolationStartFileIndex"] = labelTool.currentFileIndex;
+
     // set current frame to start position and start size
     folderPositionArray[interpolationObjIndexCurrentFile].domElement.firstChild.firstChild.innerText = "Interpolation Start Position (frame " + (labelTool.currentFileIndex + 1) + ")";
     folderRotationArray[interpolationObjIndexCurrentFile].domElement.firstChild.firstChild.innerText = "Interpolation Start Rotation (frame " + (labelTool.currentFileIndex + 1) + ")";
@@ -328,8 +329,8 @@ function undoOperation() {
         case "classLabel":
             let objectIndex = Number(lastOperation["objectIndex"]);
             let previousClassLabel = lastOperation["previousClass"];
+            labelTool.selectedMesh = lastOperation["selectedMesh"];
             annotationObjects.changeClass(objectIndex, previousClassLabel);
-            // select previous class in class picker
             break;
         case "trackId":
             break;
@@ -1460,7 +1461,6 @@ function keyDownHandler(event) {
      * 글로벌 Shortcut EVENT
      */
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
-        console.log("undo")
         undoOperation(); // undoOperation 함수 호출
     }
     if (labelTool.selectedMesh !== undefined) {

@@ -104,6 +104,8 @@ let annotationObjects = {
         $($(spriteElem)[0]).css("background", classesBoundingBox[newClassLabel].color);
 
         // update class label
+        let previousClassLabel = this.contents[labelTool.currentFileIndex][selectedObjectIndex]["class"];
+        this.contents[labelTool.currentFileIndex][selectedObjectIndex]["prev_class"] = previousClassLabel;
         this.contents[labelTool.currentFileIndex][selectedObjectIndex]["class"] = newClassLabel;
 
         // update track id
