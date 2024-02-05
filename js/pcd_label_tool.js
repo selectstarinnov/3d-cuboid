@@ -713,6 +713,9 @@ function get3DLabel(parameters) {
         prev_width: parameters.width,
         prev_length: parameters.length,
         prev_height: parameters.height,
+        prev_x: parameters.x,
+        prev_y: parameters.y,
+        prev_z: parameters.z
     };
     let cubeGeometry = new THREE.BoxBufferGeometry(1.0, 1.0, 1.0);//width, length, height
     let color;
@@ -986,40 +989,54 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
     folderSize.close();
     folderSizeArray.push(folderSize);
 
+    function changeCubePosition(type, value){
+        // Note: Do not use insertIndex because it might change (if deleting e.g. an object in between)
+        // use track id and class to calculate selection index
+        let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
+        labelTool.cubeArray[labelTool.currentFileIndex][selectionIndex].position[type] = value;
+        annotationObjects.contents[labelTool.currentFileIndex][selectionIndex][type] = value;
+        if (labelTool.pointCloudOnlyAnnotation === false) {
+            // update bounding box
+            update2DBoundingBox(labelTool.currentFileIndex, selectionIndex, true);
+        }
+    }
+
+    function undoCubePosition(type, value){
+        let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
+        let prevParam = `prev_${type}`;
+        let prevValue = annotationObjects.contents[labelTool.currentFileIndex][selectionIndex][prevParam];
+        if(prevValue !== value){
+            let changeBboxProperty = {
+                "type": "UPDATE_BOX_PROPERTY",
+                "undoFunc": () => {
+                    changeCubePosition(type, prevValue);
+                }
+            };
+            operationStack.push(changeBboxProperty);
+            annotationObjects.contents[labelTool.currentFileIndex][selectionIndex][prevParam] = value;
+        }
+    }
+
     cubeX.onChange(function (value) {
         if (value >= minXPos && value < maxXPos) {
-            // Note: Do not use insertIndex because it might change (if deleting e.g. an object in between)
-            // use track id and class to calculate selection index
-            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
-            labelTool.cubeArray[labelTool.currentFileIndex][selectionIndex].position.x = value;
-            annotationObjects.contents[labelTool.currentFileIndex][selectionIndex]["x"] = value;
-            if (labelTool.pointCloudOnlyAnnotation === false) {
-                // update bounding box
-                update2DBoundingBox(labelTool.currentFileIndex, selectionIndex, true);
-            }
+            changeCubePosition('x', value)
         }
+    }).onFinishChange((value) => {
+        undoCubePosition('x', value);
     });
     cubeY.onChange(function (value) {
         if (value >= minYPos && value < maxYPos) {
-            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
-            labelTool.cubeArray[labelTool.currentFileIndex][selectionIndex].position.y = value;
-            annotationObjects.contents[labelTool.currentFileIndex][selectionIndex]["y"] = value;
-            if (labelTool.pointCloudOnlyAnnotation === false) {
-                // update bounding box
-                update2DBoundingBox(labelTool.currentFileIndex, selectionIndex, true);
-            }
+            changeCubePosition('y', value)
         }
+    }).onFinishChange((value) => {
+        undoCubePosition('y', value);
     });
     cubeZ.onChange(function (value) {
         if (value >= minZPos && value < maxZPos) {
-            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
-            labelTool.cubeArray[labelTool.currentFileIndex][selectionIndex].position.z = value;
-            annotationObjects.contents[labelTool.currentFileIndex][selectionIndex]["z"] = value;
-            if (labelTool.pointCloudOnlyAnnotation === false) {
-                // update bounding box
-                update2DBoundingBox(labelTool.currentFileIndex, selectionIndex, true);
-            }
+            changeCubePosition('z', value)
         }
+    }).onFinishChange((value) => {
+        undoCubePosition('z', value);
     });
 
     function changeRotation(value, type){
@@ -1074,20 +1091,36 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
         undoRotation(value, 'rotationRoll');
     })
 
-    function undoSize(preValue, type){
-        let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
-        let prevParam = `prev_${type}`;
-        let changeBboxProperty = {
-            "type": "UPDATE_BOX_PROPERTY",
-            "undoFunc": () => {
-                changeCubeWidth(preValue);
+    function setUndoDone(prevType, val){
+        /**
+         * prev_width 값을 현재 val 로 변경하도록 한다.
+         */
+        for (let i = 0; i < labelTool.numFrames; i++) {
+            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, i);
+            if (selectionIndex !== -1) {
+                annotationObjects.contents[i][selectionIndex][`prev_${prevType}`] = val;
             }
-        };
-        operationStack.push(changeBboxProperty);
-        annotationObjects.contents[labelTool.currentFileIndex][selectionIndex][prevParam] = preValue;
+        }
     }
 
-    function changeCubeWidth(val){
+    function getPrevValueToUndo(prevType){
+        /**
+         * 마우스를 Up 했을때 그때 값을 numFrames 의 prev값을 넘겨주는 prevValueList 를 만든다.
+         * 해당 값을 undo function 으로 넘겨서 Cube Width 를 이전 값으로 되돌리도록 한다.
+         * -> 이렇게 짜는 이유는 기존 코드가 모든 Frame 들의 화면을 돌면서 값을 세팅하고 있어서 cube Rotation 처럼 바로 수정을 불가능.
+         */
+        let prevValueList = {};
+        for (let i = 0; i < labelTool.numFrames; i++) {
+            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, i);
+            if (selectionIndex !== -1) {
+                // val 파라미터값이 존재할 경우, val 값으로 설정되고 없으면 undo 기능이 동작하도록 한다.
+                prevValueList[`${bbox.trackId}${bbox.class}${i}${selectionIndex}`] = annotationObjects.contents[i][selectionIndex][`prev_${prevType}`];
+            }
+        }
+        return prevValueList;
+    }
+
+    function changeCube(val, type){
         for (let i = 0; i < labelTool.numFrames; i++) {
             let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, i);
             if (selectionIndex !== -1) {
@@ -1103,27 +1136,49 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
                     alert("문제가 있습니다.")
                     return;
                 }
-                console.log(value)
                 /**
                  * ## 아래 코드는 position.x 와 position.y 값도 함께 변경시키는 코드. 현재 주석처리
                  */
-                // let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
-                // labelTool.cubeArray[i][selectionIndex].position.x = newXPos;
-                // if (i === labelTool.currentFileIndex) {
-                    // bbox.x = newXPos;
+                // if(type === 'width'){
+                //     let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
+                //     labelTool.cubeArray[i][selectionIndex].position.x = newXPos;
+                //     if (i === labelTool.currentFileIndex) {
+                //         bbox.x = newXPos;
+                //     }
+                //     annotationObjects.contents[i][selectionIndex]["x"] = newXPos;
+                //     let newYPos = labelTool.cubeArray[i][selectionIndex].position.y + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.sin(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
+                //     labelTool.cubeArray[i][selectionIndex].position.y = newYPos;
+                //     if (i === labelTool.currentFileIndex) {
+                //         bbox.y = newYPos;
+                //     }
+                //     annotationObjects.contents[i][selectionIndex]["y"] = newYPos;
+                // } else if(type === 'length'){
+                //     let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.y) * Math.sin(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
+                //     labelTool.cubeArray[i][selectionIndex].position.x = newXPos;
+                //     bbox.x = newXPos;
+                //     annotationObjects.contents[i][selectionIndex]["x"] = newXPos;
+                //     let newYPos = labelTool.cubeArray[i][selectionIndex].position.y - (value - labelTool.cubeArray[i][selectionIndex].scale.y) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
+                //     labelTool.cubeArray[i][selectionIndex].position.y = newYPos;
+                //     bbox.y = newYPos;
+                //     annotationObjects.contents[i][selectionIndex]["y"] = newYPos;
+                // } else if(type === 'height'){
+                //     let newZPos = labelTool.cubeArray[i][selectionIndex].position.z + (value - labelTool.cubeArray[i][selectionIndex].scale.z) / 2;
+                //     labelTool.cubeArray[i][selectionIndex].position.z = newZPos;
+                //     bbox.z = newZPos;
                 // }
-                // annotationObjects.contents[i][selectionIndex]["x"] = newXPos;
-                // let newYPos = labelTool.cubeArray[i][selectionIndex].position.y + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.sin(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
-                // labelTool.cubeArray[i][selectionIndex].position.y = newYPos;
-                // if (i === labelTool.currentFileIndex) {
-                    // bbox.y = newYPos;
-                // }
-                // annotationObjects.contents[i][selectionIndex]["y"] = newYPos;
                 /**
                  * ## 종료
                  */
-                labelTool.cubeArray[i][selectionIndex].scale.x = value;
-                annotationObjects.contents[i][selectionIndex]["width"] = value;
+                let position;
+                if(type === 'width'){
+                    position = 'x'
+                }else if(type === 'length'){
+                    position = 'y'
+                }else if(type === 'height'){
+                    position = 'z'
+                }
+                labelTool.cubeArray[i][selectionIndex].scale[position] = value;
+                annotationObjects.contents[i][selectionIndex][type] = value;
             }
         }
         if (labelTool.pointCloudOnlyAnnotation === false) {
@@ -1133,77 +1188,45 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
     }
 
     cubeWidth.onChange(function (value) {
-        changeCubeWidth(value);
+        changeCube(value, "width");
     }).onFinishChange(val => {
-        /**
-         * 마우스를 Up 했을때 그때 값을 numFrames 의 prev값을 넘겨주는 prevValueList 를 만든다.
-         * 해당 값을 undo function 으로 넘겨서 Cube Width 를 이전 값으로 되돌리도록 한다.
-         * -> 이렇게 짜는 이유는 기존 코드가 모든 Frame 들의 화면을 돌면서 값을 세팅하고 있어서 cube Rotation 처럼 바로 수정을 불가능.
-         * @type {{}}
-         */
-        let prevValueList = {};
-        for (let i = 0; i < labelTool.numFrames; i++) {
-            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, i);
-            if (selectionIndex !== -1) {
-                // val 파라미터값이 존재할 경우, val 값으로 설정되고 없으면 undo 기능이 동작하도록 한다.
-                prevValueList[`${bbox.trackId}${bbox.class}${i}${selectionIndex}`] = annotationObjects.contents[i][selectionIndex].prev_width;
-            }
-        }
+        let prevValueList = getPrevValueToUndo('width');
         let changeBboxProperty = {
             "type": "UPDATE_BOX_PROPERTY",
             "undoFunc": () => {
-                changeCubeWidth(prevValueList);
+                changeCube(prevValueList, 'width');
             }
         };
         operationStack.push(changeBboxProperty);
-        /**
-         * prev_width 값을 현재 val 로 변경하도록 한다.
-         */
-        for (let i = 0; i < labelTool.numFrames; i++) {
-            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, i);
-            if (selectionIndex !== -1) {
-                annotationObjects.contents[i][selectionIndex]["prev_width"] = val;
-            }
-        }
+        setUndoDone('width', val)
     });
 
     cubeLength.onChange(function (value) {
-        for (let i = 0; i < labelTool.numFrames; i++) {
-            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, i);
-            if (selectionIndex !== -1) {
-                let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.y) * Math.sin(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
-                labelTool.cubeArray[i][selectionIndex].position.x = newXPos;
-                bbox.x = newXPos;
-                annotationObjects.contents[i][selectionIndex]["x"] = newXPos;
-                let newYPos = labelTool.cubeArray[i][selectionIndex].position.y - (value - labelTool.cubeArray[i][selectionIndex].scale.y) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
-                labelTool.cubeArray[i][selectionIndex].position.y = newYPos;
-                bbox.y = newYPos;
-                annotationObjects.contents[i][selectionIndex]["y"] = newYPos;
-                labelTool.cubeArray[i][selectionIndex].scale.y = value;
-                annotationObjects.contents[i][selectionIndex]["length"] = value;
+        changeCube(value, 'length')
+    }).onFinishChange(val => {
+        let prevValueList = getPrevValueToUndo('length');
+        let changeBboxProperty = {
+            "type": "UPDATE_BOX_PROPERTY",
+            "undoFunc": () => {
+                changeCube(prevValueList, 'length');
             }
-        }
-        if (labelTool.pointCloudOnlyAnnotation === false) {
-            let selectionIndexCurrent = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
-            update2DBoundingBox(labelTool.currentFileIndex, selectionIndexCurrent, true);
-        }
+        };
+        operationStack.push(changeBboxProperty);
+        setUndoDone('length', val)
     });
-    cubeHeight.onChange(function (value) {
-        for (let i = 0; i < labelTool.numFrames; i++) {
-            let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, i);
-            if (selectionIndex !== -1) {
-                let newZPos = labelTool.cubeArray[i][selectionIndex].position.z + (value - labelTool.cubeArray[i][selectionIndex].scale.z) / 2;
-                labelTool.cubeArray[i][selectionIndex].position.z = newZPos;
-                bbox.z = newZPos;
-                labelTool.cubeArray[i][selectionIndex].scale.z = value;
-                annotationObjects.contents[i][selectionIndex]["height"] = value;
-            }
-        }
-        if (labelTool.pointCloudOnlyAnnotation === false) {
-            let selectionIndexCurrent = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
-            update2DBoundingBox(labelTool.currentFileIndex, selectionIndexCurrent, true);
-        }
 
+    cubeHeight.onChange(function (value) {
+        changeCube(value, 'height')
+    }).onFinishChange(val => {
+        let prevValueList = getPrevValueToUndo('height');
+        let changeBboxProperty = {
+            "type": "UPDATE_BOX_PROPERTY",
+            "undoFunc": () => {
+                changeCube(prevValueList, 'height');
+            }
+        };
+        operationStack.push(changeBboxProperty);
+        setUndoDone('height', val)
     });
 
     if (bboxEndParams !== undefined && interpolationMode === true) {
