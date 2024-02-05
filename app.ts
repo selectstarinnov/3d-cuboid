@@ -2,7 +2,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const express = require("express");
 const app = express();
-
+const classes = require("./config/classes.js");
 
 app.use(express.static(__dirname))
 app.use(bodyParser.json());
@@ -12,6 +12,12 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/index.html");
+});
+
+app.get("/classes", (req, res) => {
+    res.send({
+        classes
+    })
 });
 
 app.post("/save", (req, res) => {

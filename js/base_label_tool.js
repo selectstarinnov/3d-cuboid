@@ -1047,7 +1047,27 @@ let labelTool = {
         this.loadAnnotations();
     },
     loadConfig() {
-        labelTool.dataStructure = loadConfigFile(labelTool.configFileName);
+        let xhr = new XMLHttpRequest();
+        let api = `/classes`;
+        xhr.open('GET', api, false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send();
+        if (xhr.status !== 200) {
+            alert('class 정보를 읽어오는데 문제가 생겼습니다.')
+
+        }
+        var response = JSON.parse(xhr.responseText); // 서버에서 받은 응답 데이터
+        let classes = response.classes.map(elm => elm.key)
+        let classColors = response.classes.map(elm => elm.color);
+        let configFileList = loadConfigFile(labelTool.configFileName);
+        let datasets = configFileList.datasets;
+        datasets = datasets.map(elm => ({
+            ...elm,
+            classes: classes,
+            class_colors: classColors
+        }))
+        configFileList.datasets = datasets;
+        labelTool.dataStructure = configFileList;
         for (let i = 0; i < labelTool.dataStructure.datasets.length; i++) {
             let datasetName = labelTool.dataStructure.datasets[i].name;
             labelTool.datasetArray.push(datasetName);
