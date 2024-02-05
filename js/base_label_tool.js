@@ -624,8 +624,8 @@ let labelTool = {
                                 },
                                 "orientation": {
                                     "rotationYaw": this.cubeArray[j][i].rotation.z,
-                                    "rotationPitch": this.cubeArray[j][i].rotation.y,
-                                    "rotationRoll": this.cubeArray[j][i].rotation.x
+                                    "rotationPitch": this.cubeArray[j][i].rotation.x,
+                                    "rotationRoll": this.cubeArray[j][i].rotation.y
                                 }
                             }
                         }
