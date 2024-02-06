@@ -127,7 +127,7 @@ body {
 #right-btn {
     height: 50px;
     position: absolute;
-    right: 495px;
+    right: 0px;
     top: 60px;
     cursor: -webkit-grabbing;
 }
