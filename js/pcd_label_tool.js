@@ -1138,33 +1138,33 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
                 /**
                  * ## 아래 코드는 position.x 와 position.y 값도 함께 변경시키는 코드. 현재 주석처리
                  */
-                // if(type === 'width'){
-                //     let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
-                //     labelTool.cubeArray[i][selectionIndex].position.x = newXPos;
-                //     if (i === labelTool.currentFileIndex) {
-                //         bbox.x = newXPos;
-                //     }
-                //     annotationObjects.contents[i][selectionIndex]["x"] = newXPos;
-                //     let newYPos = labelTool.cubeArray[i][selectionIndex].position.y + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.sin(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
-                //     labelTool.cubeArray[i][selectionIndex].position.y = newYPos;
-                //     if (i === labelTool.currentFileIndex) {
-                //         bbox.y = newYPos;
-                //     }
-                //     annotationObjects.contents[i][selectionIndex]["y"] = newYPos;
-                // } else if(type === 'length'){
-                //     let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.y) * Math.sin(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
-                //     labelTool.cubeArray[i][selectionIndex].position.x = newXPos;
-                //     bbox.x = newXPos;
-                //     annotationObjects.contents[i][selectionIndex]["x"] = newXPos;
-                //     let newYPos = labelTool.cubeArray[i][selectionIndex].position.y - (value - labelTool.cubeArray[i][selectionIndex].scale.y) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
-                //     labelTool.cubeArray[i][selectionIndex].position.y = newYPos;
-                //     bbox.y = newYPos;
-                //     annotationObjects.contents[i][selectionIndex]["y"] = newYPos;
-                // } else if(type === 'height'){
-                //     let newZPos = labelTool.cubeArray[i][selectionIndex].position.z + (value - labelTool.cubeArray[i][selectionIndex].scale.z) / 2;
-                //     labelTool.cubeArray[i][selectionIndex].position.z = newZPos;
-                //     bbox.z = newZPos;
-                // }
+                if(type === 'width'){
+                    let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
+                    labelTool.cubeArray[i][selectionIndex].position.x = newXPos;
+                    if (i === labelTool.currentFileIndex) {
+                        bbox.x = newXPos;
+                    }
+                    annotationObjects.contents[i][selectionIndex]["x"] = newXPos;
+                    let newYPos = labelTool.cubeArray[i][selectionIndex].position.y + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.sin(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
+                    labelTool.cubeArray[i][selectionIndex].position.y = newYPos;
+                    if (i === labelTool.currentFileIndex) {
+                        bbox.y = newYPos;
+                    }
+                    annotationObjects.contents[i][selectionIndex]["y"] = newYPos;
+                } else if(type === 'length'){
+                    let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.y) * Math.sin(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
+                    labelTool.cubeArray[i][selectionIndex].position.x = newXPos;
+                    bbox.x = newXPos;
+                    annotationObjects.contents[i][selectionIndex]["x"] = newXPos;
+                    let newYPos = labelTool.cubeArray[i][selectionIndex].position.y - (value - labelTool.cubeArray[i][selectionIndex].scale.y) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;
+                    labelTool.cubeArray[i][selectionIndex].position.y = newYPos;
+                    bbox.y = newYPos;
+                    annotationObjects.contents[i][selectionIndex]["y"] = newYPos;
+                } else if(type === 'height'){
+                    let newZPos = labelTool.cubeArray[i][selectionIndex].position.z + (value - labelTool.cubeArray[i][selectionIndex].scale.z) / 2;
+                    labelTool.cubeArray[i][selectionIndex].position.z = newZPos;
+                    bbox.z = newZPos;
+                }
                 /**
                  * ## 종료
                  */
@@ -1471,7 +1471,9 @@ function onWindowResize() {
 function getObjectIndexByName(objectName) {
     let idToFind = objectName.split("-")[1];// e.g. cube-V1
     for (let i = 0; i < annotationObjects.contents[labelTool.currentFileIndex].length; i++) {
-        let uniqueId = annotationObjects.contents[labelTool.currentFileIndex][i]["class"].toLowerCase().charAt(0) + annotationObjects.contents[labelTool.currentFileIndex][i]["trackId"];
+        // 기존애는 annotationObjects.contents[labelTool.currentFileIndex][i]["class"] 를 toLowerCase() 로 변경해서 찾음.
+        // let uniqueId = annotationObjects.contents[labelTool.currentFileIndex][i]["class"].toLowerCase().charAt(0) + annotationObjects.contents[labelTool.currentFileIndex][i]["trackId"];
+        let uniqueId = annotationObjects.contents[labelTool.currentFileIndex][i]["class"].charAt(0) + annotationObjects.contents[labelTool.currentFileIndex][i]["trackId"];
         if (uniqueId === idToFind) {
             return i;
         }
@@ -1480,6 +1482,7 @@ function getObjectIndexByName(objectName) {
 
 function updateObjectPosition() {
     let objectIndexByTrackId = getObjectIndexByName(labelTool.selectedMesh.name);
+    if(objectIndexByTrackId === undefined) return;
     annotationObjects.contents[labelTool.currentFileIndex][objectIndexByTrackId]["x"] = labelTool.selectedMesh.position.x;
     annotationObjects.contents[labelTool.currentFileIndex][objectIndexByTrackId]["y"] = labelTool.selectedMesh.position.y;
     annotationObjects.contents[labelTool.currentFileIndex][objectIndexByTrackId]["z"] = labelTool.selectedMesh.position.z;
@@ -1500,7 +1503,7 @@ function updateObjectPosition() {
     labelTool.cubeArray[labelTool.currentFileIndex][objectIndexByTrackId]["rotationPitch"] = labelTool.selectedMesh.rotation.x;
     labelTool.cubeArray[labelTool.currentFileIndex][objectIndexByTrackId]["rotationRoll"] = labelTool.selectedMesh.rotation.y;
 
-    if (interpolationMode === true && labelTool.selectedMesh !== undefined) {
+    if (interpolationMode && labelTool.selectedMesh !== undefined) {
         // let selectionIndex = annotationObjects.getSelectionIndex();
         let interpolationStartFileIndex = annotationObjects.contents[labelTool.currentFileIndex][interpolationObjIndexCurrentFile]["interpolationStartFileIndex"];
         if (interpolationStartFileIndex !== labelTool.currentFileIndex) {
@@ -1713,7 +1716,7 @@ function keyDownHandler(event) {
 }
 
 function cameraInit(){
-    currentCamera.position.set(0, 0, 0);
+    currentCamera.position.set(0, 0, 5);
     // up.set -> x. y, z 중 어느 축을 위로 할지 정하는 함수.
     currentCamera.up.set(0, 0, 1);
 }
