@@ -459,6 +459,7 @@ let labelTool = {
         // Remove old bounding boxes of current frame.
         let frameAnnotations = frameObject.labels;
         // Add new bounding boxes
+        if(frameAnnotations === undefined) return;
         for (let annotationIdx in frameAnnotations) {
             if (frameAnnotations.hasOwnProperty(annotationIdx)) {
                 let annotation = frameAnnotations[annotationIdx];
@@ -878,6 +879,7 @@ let labelTool = {
                         this.loadFrameAnnotationsProvidentiaJSON(res);
                     }.bind(this),
                     error: function (res) {
+
                     }.bind(this)
                 });
             }
@@ -893,7 +895,10 @@ let labelTool = {
                             file_name: fileName
                         },
                         success: function (res) {
-                            this.loadAnnotationsNuscenes(res, i);
+                            try{
+                                this.loadAnnotationsNuscenes(res, i);
+                            }catch (e){}
+
                         }.bind(this),
                         error: function (res) {
                         }.bind(this)
@@ -910,9 +915,14 @@ let labelTool = {
                             file_name: fileName
                         },
                         success: function (res) {
-                            this.loadAnnotationsNuScenesJSON(res);
+                            try{
+                                this.loadAnnotationsNuScenesJSON(res);
+                            }catch (e){
+
+                            }
                         }.bind(this),
                         error: function (res) {
+
                         }.bind(this)
                     });
                 }

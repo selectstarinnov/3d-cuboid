@@ -1,7 +1,7 @@
 {
   "datasets": [
     {
-      "name": "NuScenes",
+      "name": "dataset1",
       "sequences": [
         "ONE"
       ]
