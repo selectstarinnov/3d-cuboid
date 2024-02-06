@@ -606,30 +606,27 @@ let labelTool = {
             for (let i = 0; i < annotationObjects.contents[j].length; i++) {
                 if (annotationObjects.contents[j][i] !== undefined && this.cubeArray[j][i] !== undefined) {
                     let annotationObj = annotationObjects.contents[j][i];
-                    // Nuscenes labels are stored in global frame within database
-                    // [optional] Nuscenes: transform 3d positions from lidar frame to global frame (lidar -> ego, ego -> global)
-                    let annotationObjectJSON =
-                        {
-                            "id": annotationObj["trackId"],
-                            "category": annotationObj["class"],
-                            "box3d": {
-                                "dimension": {
-                                    "width": this.cubeArray[j][i].scale.x,
-                                    "length": this.cubeArray[j][i].scale.y,
-                                    "height": this.cubeArray[j][i].scale.z
-                                },
-                                "location": {
-                                    "x": this.cubeArray[j][i].position.x,
-                                    "y": this.cubeArray[j][i].position.y,
-                                    "z": this.cubeArray[j][i].position.z
-                                },
-                                "orientation": {
-                                    "rotationYaw": this.cubeArray[j][i].rotation.z,
-                                    "rotationPitch": this.cubeArray[j][i].rotation.x,
-                                    "rotationRoll": this.cubeArray[j][i].rotation.y
-                                }
+                    let annotationObjectJSON = {
+                        "id": annotationObj["trackId"],
+                        "category": annotationObj["class"],
+                        "box3d": {
+                            "dimension": {
+                                "width": this.cubeArray[j][i].scale.x,
+                                "length": this.cubeArray[j][i].scale.y,
+                                "height": this.cubeArray[j][i].scale.z
+                            },
+                            "location": {
+                                "x": this.cubeArray[j][i].position.x,
+                                "y": this.cubeArray[j][i].position.y,
+                                "z": this.cubeArray[j][i].position.z
+                            },
+                            "orientation": {
+                                "rotationYaw": this.cubeArray[j][i].rotation.z,
+                                "rotationPitch": this.cubeArray[j][i].rotation.y,
+                                "rotationRoll": this.cubeArray[j][i].rotation.x
                             }
                         }
+                    }
                     annotationsInFrame.push(annotationObjectJSON);
                 }
             }

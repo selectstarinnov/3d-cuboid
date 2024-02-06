@@ -121,7 +121,7 @@ const classes = [
     },
     {
         key: "TRAFFIC_CONE",
-        color: "#"
+        color: "#5DDB99"
     },
     {
         key: "TRAFFIC_BARREL",

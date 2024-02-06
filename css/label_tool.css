@@ -614,8 +614,9 @@ text {
     z-index: 102;
     left: 0px;
     /*top: 290px;*/
-    border: 1px;
-    border-style: outset;
+    /*border: 1px !important;*/
+    /*border-style: outset !important;*/
+    /*border-color: white !important;*/
 }
 
 #canvasFrontView {
@@ -625,8 +626,9 @@ text {
     z-index: 102;
     left: 0px;
     /*top: 600px;*/
-    border: 1px;
-    border-style: outset;
+    /*border: 1px !important;*/
+    /*border-style: outset !important;*/
+    /*border-color: white !important;*/
 }
 
 #canvasBev {
@@ -636,8 +638,9 @@ text {
     z-index: 102;
     left: 0px;
     /*top: 910px;*/
-    border: 1px;
-    border-style: outset;
+    /*border: 1px !important;*/
+    /*border-style: outset !important;*/
+    /*border-color: white !important;*/
 }
 
 .Resizer {

@@ -642,6 +642,7 @@ function hideMasterView() {
     $("#canvasSideView").hide();
     $("#canvasFrontView").hide();
     $("#canvasBev").hide();
+    $("#class-picker").css("left", 10);
 }
 
 //change camera position to bird view position
@@ -922,9 +923,10 @@ function deleteObject(bboxClass, trackId, labelIndex) {
         elem.id = "copy-label-to-next-frame-checkbox-" + (i);
     }
     // hide master view
-    $("#canvasBev").hide();
-    $("#canvasSideView").hide();
-    $("#canvasFrontView").hide();
+    hideMasterView();
+    // $("#canvasBev").hide();
+    // $("#canvasSideView").hide();
+    // $("#canvasFrontView").hide();
     // move class picker to left
     $("#class-picker").css("left", 10);
     annotationObjects.__selectionIndexCurrentFrame = -1;
@@ -1043,9 +1045,9 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
         if(type === 'rotationYaw'){
             position = 'z'
         }else if (type === 'rotationPitch'){
-            position = 'x';
-        }else if (type === 'rotationRoll'){
             position = 'y';
+        }else if (type === 'rotationRoll'){
+            position = 'x';
         }
         if(position === undefined) return;
         let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
@@ -2420,7 +2422,7 @@ function updateBEV(xPos, yPos, zPos) {
     let panelTopPos = headerHeight + imagePaneHeight;
     canvasBEV.left = "0px";
     canvasBEV.top = panelTopPos;
-
+    canvasBEV.style.borderRight = '1px solid white'
     cameraBEV.position.set(xPos, yPos, zPos + 100);
     cameraBEV.lookAt(xPos, yPos, zPos);
 }
@@ -2428,14 +2430,15 @@ function updateBEV(xPos, yPos, zPos) {
 function initBev() {
     canvasBEV = document.createElement("canvas");
     canvasBEV.id = "canvasBev";
+    canvasBEV.style.borderRight = '1px solid white'
     let wBev = window.innerWidth / 3;
     canvasBEV.width = wBev;
-    let imagePaneHeight = parseInt($("#layout_layout_resizer_top").css("top"), 10);
-    let hBev;
-    hBev = (window.innerHeight - imagePaneHeight - headerHeight) / 3;
+    let imagePaneHeight = getSideViewHeight();
+    // let hBev = (window.innerHeight - imagePaneHeight - headerHeight) / 3;
+    let hBev = imagePaneHeight;
     canvasBEV.height = hBev;
     $("body").append(canvasBEV);
-    $("#canvasBev").css("top", headerHeight + imagePaneHeight + 2 * hBev);
+    $("#canvasBev").css("top", `${imagePaneHeight * 2}px`);
 
     cameraBEV = new THREE.OrthographicCamera(window.innerWidth / -4, window.innerWidth / 4, window.innerHeight / 4, window.innerHeight / -4, -5000, 10000);
     cameraBEV.up = new THREE.Vector3(0, 0, -1);
@@ -2454,15 +2457,13 @@ function showBEV(xPos, yPos, zPos) {
 function initFrontView() {
     canvasFrontView = document.createElement("canvas");
     canvasFrontView.id = "canvasFrontView";
-    let widthFrontView = window.innerWidth / 3;
-    canvasFrontView.width = widthFrontView;
-    let imagePanelTopPos = parseInt($("#layout_layout_resizer_top").css("top"), 10);
-    let heightFrontView;
-    heightFrontView = (window.innerHeight - imagePanelTopPos - headerHeight) / 3;
-    canvasFrontView.height = heightFrontView;
+    canvasFrontView.style.borderRight = '1px solid white'
+    canvasFrontView.style.borderBottom = '1px solid white'
+    canvasFrontView.width = window.innerWidth / 3;
+    canvasFrontView.height = getSideViewHeight();
 
     $("body").append(canvasFrontView);
-    $("#canvasFrontView").css("top", headerHeight + imagePanelTopPos + heightFrontView);
+    $("#canvasFrontView").css("top", (canvasFrontView.height - 4) + 'px');
     cameraFrontView = new THREE.OrthographicCamera(window.innerWidth / -4, window.innerWidth / 4, window.innerHeight / 4, window.innerHeight / -4, -5000, 10000);
     cameraFrontView.lookAt(new THREE.Vector3(0, 0, -1));
     scene.add(cameraFrontView);
@@ -2491,17 +2492,22 @@ function showFrontView() {
     $("#canvasFrontView").show();
 }
 
+function getSideViewHeight(radix){
+    if(radix === undefined) radix = 10;
+    let imagePaneHeight = parseInt($("#layout_layout_resizer_top").css("top"), radix);
+    if(imagePaneHeight === undefined || isNaN(imagePaneHeight)){
+        imagePaneHeight = window.innerHeight / 3;
+    }
+    return imagePaneHeight;
+}
 function initSideView() {
     canvasSideView = document.createElement("canvas");
     canvasSideView.id = "canvasSideView";
-    let widthSideView = window.innerWidth / 3;
-    let imagePaneHeight = parseInt($("#layout_layout_resizer_top").css("top"), 10);
-    let heightSideView;
-    heightSideView = (window.innerHeight - imagePaneHeight - headerHeight) / 3;
-    canvasSideView.width = widthSideView;
-    canvasSideView.height = heightSideView;
+    canvasSideView.style.borderBottom = '1px solid white'
+    canvasSideView.style.borderRight = '1px solid white'
+    canvasSideView.width = window.innerWidth / 3;
+    canvasSideView.height = (getSideViewHeight() + 5);
     $("body").append(canvasSideView);
-    $("#canvasSideView").css({top: imagePaneHeight + headerHeight + 'px'});
 
     cameraSideView = new THREE.OrthographicCamera(window.innerWidth / -4, window.innerWidth / 4, window.innerHeight / 4, window.innerHeight / -4, -5000, 10000);
     cameraSideView.lookAt(new THREE.Vector3(1, 0, 0));
@@ -2559,6 +2565,7 @@ function mouseUpLogic(ev) {
             useTransformControls = true;
         }
     }
+    // Mouse 왼쪽 버튼을 클릭하였을 경우.
     if (ev.button === 0) {
         let rect = ev.target.getBoundingClientRect();
         let el = $("#canvas3d")
@@ -2747,11 +2754,7 @@ function mouseUpLogic(ev) {
             // disable interpolate button
             disableInterpolationBtn();
 
-            $("#canvasBev").hide();
-            $("#canvasSideView").hide();
-            $("#canvasFrontView").hide();
-            // move class picker to left
-            $("#class-picker").css("left", 10);
+            hideMasterView();
 
             let interpolationModeCheckbox = document.getElementById("interpolation-checkbox");
             disableInterpolationModeCheckbox(interpolationModeCheckbox);
@@ -3028,6 +3031,8 @@ function mouseDownLogic(ev) {
         }
     }
 }
+
+
 
 function setOperationStackItem({type, id, originValue, currentValue}){
     operationStack = [
@@ -3350,6 +3355,7 @@ function initGuiBoundingBoxAnnotations() {
 }
 
 function init() {
+
     if (WEBGL.isWebGLAvailable() === false) {
         document.body.appendChild(WEBGL.getWebGLErrorMessage());
     }
@@ -3443,8 +3449,8 @@ function init() {
                 labelTool.selectedMesh = undefined;
                 transformControls.detach();
                 transformControls = undefined;
-                hideMasterView();
             }
+            hideMasterView();
             if (value === labelTool.views.orthographic) {
                 birdsEyeViewFlag = true;
                 disablePointSizeSlider();
