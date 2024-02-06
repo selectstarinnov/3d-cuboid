@@ -742,8 +742,7 @@ function get3DLabel(parameters) {
     });
 
     let cubeMaterials = [cubeMaterialFrontSide, cubeMaterialSide, cubeMaterialSide, cubeMaterialSide, cubeMaterialSide, cubeMaterialSide];
-    let faceMaterial = new THREE.MeshFaceMaterial(cubeMaterials);
-    let cubeMesh = new THREE.Mesh(cubeGeometry, faceMaterial);
+    let cubeMesh = new THREE.Mesh(cubeGeometry, cubeMaterials);
 
     cubeMesh.position.set(bbox.x, bbox.y, bbox.z);
     cubeMesh.scale.set(bbox.width, bbox.length, bbox.height);
@@ -1713,15 +1712,19 @@ function keyDownHandler(event) {
 
 }
 
+function cameraInit(){
+    currentCamera.position.set(0, 0, 0);
+    // up.set -> x. y, z 중 어느 축을 위로 할지 정하는 함수.
+    currentCamera.up.set(0, 0, 1);
+}
+
 function setOrbitControls() {
     document.removeEventListener('keydown', onKeyDown, false);
     document.removeEventListener('keyup', onKeyUp, false);
     scene.remove(pointerLockObject);
 
-
     currentCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
-    currentCamera.position.set(0, 0, 5);
-    currentCamera.up.set(0, 0, 1);
+    cameraInit();
 
     currentOrbitControls = new THREE.OrbitControls(currentCamera, renderer.domElement);
     currentOrbitControls.enablePan = true;
@@ -1825,8 +1828,8 @@ function setPerspectiveView() {
         }
     }
 
-    currentCamera.position.set(0, 0, 5);
-    currentCamera.up.set(0, 0, 1);
+    // currentCamera.position.set(0, 0, 5);
+    cameraInit();
 
     canvas3D.removeEventListener('keydown', canvas3DKeyDownHandler);
     canvas3D.addEventListener('keydown', canvas3DKeyDownHandler);
@@ -1846,12 +1849,9 @@ function setOrthographicView() {
         transformControls.showZ = false;
     }
 
-    // const aspect = window.innerWidth / window.innerHeight
-    // currentCamera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 1000);
     currentCamera = new THREE.OrthographicCamera(-40, 40, 20, -20, 0.0001, 2000);
-    // currentCamera = orthographicCamera;
-    currentCamera.position.set(0, 0, 5);
-    currentCamera.up.set(0, 0, 1);
+    // currentCamera.position.set(0, 0, 5);
+    cameraInit();
 
     currentOrbitControls = new THREE.OrbitControls(currentCamera, renderer.domElement);
     currentOrbitControls.enablePan = true;
@@ -3358,7 +3358,7 @@ function init() {
 
     scene.fog = new THREE.Fog(scene.background, 3500, 15000);
 
-    let axisHelper = new THREE.AxisHelper(1);
+    let axisHelper = new THREE.AxesHelper(1);
     axisHelper.position.set(0, 0, 0);
     scene.add(axisHelper);
 
@@ -3742,9 +3742,7 @@ function init() {
     classPickerElem.css('background-color', '#353535');
     $(classPickerElem[0]).css('background-color', '#525252');
     classPickerElem.css('border-bottom', '0px');
-    if (labelTool.currentDataset === labelTool.datasets.NuScenes) {
-        $("#class-picker").css("width", '220px');
-    }
+    $("#class-picker").css("width", '220px');
     $('#bounding-box-3d-menu').css('width', '480px');
     $('#bounding-box-3d-menu ul li').css('background-color', '#353535');
     $("#bounding-box-3d-menu .close-button").click(function () {

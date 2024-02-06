@@ -231,11 +231,11 @@ THREE.PCDLoader.prototype = {
 
 		var geometry = new THREE.BufferGeometry();
 		if ( position != false )
-			geometry.addAttribute( 'position', new THREE.BufferAttribute( position, 3 ) );
+			geometry.setAttribute( 'position', new THREE.BufferAttribute( position, 3 ) );
 		if ( color != false )
-			geometry.addAttribute( 'color', new THREE.BufferAttribute( color, 3 ) );
+			geometry.setAttribute( 'color', new THREE.BufferAttribute( color, 3 ) );
 		if ( normal != false )
-			geometry.addAttribute( 'normal', new THREE.BufferAttribute( normal, 3 ) );
+			geometry.setAttribute( 'normal', new THREE.BufferAttribute( normal, 3 ) );
 
 		geometry.computeBoundingSphere();
 

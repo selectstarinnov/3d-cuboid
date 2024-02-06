@@ -526,6 +526,7 @@ text {
     padding-bottom: 30px;
     float: none;
     position: fixed;
+    width: 260px !important;
 }
 
 #bounding-box-3d-menu {
