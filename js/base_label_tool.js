@@ -478,7 +478,6 @@ let labelTool = {
                         classesBoundingBox[annotation.category].maxTrackId = params.id;
                     }
                 }catch (e){
-                    alert("Class 정보가 올바르지 않습니다.")
                     throw ''
                 }
 
@@ -1066,7 +1065,8 @@ let labelTool = {
         var response = JSON.parse(xhr.responseText); // 서버에서 받은 응답 데이터
         let classes = response.classes.map(elm => elm.key)
         let classColors = response.classes.map(elm => elm.color);
-        let configFileList = loadConfigFile(labelTool.configFileName);
+        // let configFileList = bakLoadConfigFile(labelTool.configFileName);
+        let configFileList = loadConfigFile();
         let datasets = configFileList.datasets;
         datasets = datasets.map(elm => ({
             ...elm,

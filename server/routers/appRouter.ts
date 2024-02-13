@@ -4,6 +4,7 @@ const requirePath = require("../requirePath.ts")
 const {dirname} = requirePath("server/utils.ts")
 const classes = requirePath("config/classes.js");
 const annotationSaver = requirePath("server/services/AnnotationSaver.ts")
+const {configSetting} = requirePath("server/services/CommonService.ts")
 const appRouter = (app) => {
     app.get("/", (req, res) => {
         res.sendFile(dirname + "/index.html");
@@ -17,6 +18,11 @@ const appRouter = (app) => {
 
     app.post("/save", (req, res) => {
         annotationSaver(req, res);
+    });
+
+    app.get("/configs", (req, res) => {
+        const response = configSetting();
+        res.json(response)
     });
 
     app.get("/frames", (req, res) => {

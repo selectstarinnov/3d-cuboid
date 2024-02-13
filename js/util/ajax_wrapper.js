@@ -18,7 +18,17 @@ function request(options) {
     }
 }
 
-function loadConfigFile(fileName) {
+function loadConfigFile() {
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', '/configs', false);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send();
+    if (xhr.status !== 200) {
+        alert('class 정보를 읽어오는데 문제가 생겼습니다.');
+    }
+    return JSON.parse(xhr.responseText); // 서버에서 받은 응답 데이터
+}
+function bakLoadConfigFile(fileName) {
     let jsonObject = undefined;
     let url = 'config/' + fileName;
     let http = new XMLHttpRequest();
