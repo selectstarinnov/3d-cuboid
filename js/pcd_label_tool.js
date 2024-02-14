@@ -114,6 +114,11 @@ let pointSizeCurrent = 0.05;
 let pointSizeMax = 1;
 let defaultBoxHeight = 1.468628;
 let gridSize = 200;
+let occlusionType = [
+    "박스 중 가려진 부분이 0%인 경우",
+    "박스 중 가려진 부분이 0% 초과, 50% 이하인 경우",
+    "박스 중 가려진 부분이 50% 초과인 경우"
+];
 
 let parameters = {
     point_size: pointSizeCurrent,
@@ -716,7 +721,7 @@ function get3DLabel(parameters) {
         prev_height: parameters.height,
         prev_x: parameters.x,
         prev_y: parameters.y,
-        prev_z: parameters.z
+        prev_z: parameters.z,
     };
     let cubeGeometry = new THREE.BoxBufferGeometry(1.0, 1.0, 1.0);//width, length, height
     let color;
@@ -961,11 +966,21 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
     }
 
 
+    // let currentDatasetDropDownController = guiOptions.add(labelTool, 'currentDataset', labelTool.datasetArray).name("Choose dataset")
+    let folderOcclusion = folderBoundingBox3DArray[insertIndex].addFolder('Occlusionss');
+    let occlusion = folderOcclusion.add(bbox, 'occlusion', {
+        [occlusionType[0]]: 0,
+        [occlusionType[1]]: 1,
+        [occlusionType[2]]: 2,
+    }).listen();
+    folderOcclusion.open();
+    folderPositionArray.push(folderOcclusion);
+
     let folderPosition = folderBoundingBox3DArray[insertIndex].addFolder('Position');
     let cubeX = folderPosition.add(bbox, 'x').name("x").min(minXPos).max(maxXPos).step(0.01).listen();
     let cubeY = folderPosition.add(bbox, 'y').name("y").min(minYPos).max(maxYPos).step(0.01).listen();
     let cubeZ = folderPosition.add(bbox, 'z').name("z").min(minZPos).max(maxZPos).step(0.01).listen();
-    folderPosition.close();
+    folderPosition.open();
     folderPositionArray.push(folderPosition);
 
     let folderRotation = folderBoundingBox3DArray[insertIndex].addFolder('Rotation');
@@ -1018,6 +1033,10 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
         }
     }
 
+    occlusion.onChange(val => {
+        changeOcclusion(val)
+    })
+
     cubeX.onChange(function (value) {
         if (value >= minXPos && value < maxXPos) {
             changeCubePosition('x', value)
@@ -1039,6 +1058,12 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
     }).onFinishChange((value) => {
         undoCubePosition('z', value);
     });
+
+    function changeOcclusion(value){
+        let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
+        labelTool.cubeArray[labelTool.currentFileIndex][selectionIndex].rotation[''] = value;
+        annotationObjects.contents[labelTool.currentFileIndex][selectionIndex]['occlusion'] = value;
+    }
 
     function changeRotation(value, type){
         let position = undefined;
@@ -1447,7 +1472,6 @@ function onWindowResize() {
     let newHeight = Math.round((window.innerHeight - headerHeight - imagePanelHeight) / 3.0);
     $("#canvasSideView").css("height", newHeight);
     $("#canvasSideView").css("top", headerHeight + imagePanelHeight);
-    console.log("window resize: top: " + headerHeight + imagePanelHeight);
     views[1].height = newHeight;
     views[1].top = 0;
     $("#canvasFrontView").css("height", newHeight);
@@ -2438,7 +2462,7 @@ function initBev() {
     let hBev = imagePaneHeight;
     canvasBEV.height = hBev;
     $("body").append(canvasBEV);
-    $("#canvasBev").css("top", `${imagePaneHeight * 2}px`);
+    $("#canvasBev").css("top", `${imagePaneHeight * 2 + getSideViewHeader()}px`);
 
     cameraBEV = new THREE.OrthographicCamera(window.innerWidth / -4, window.innerWidth / 4, window.innerHeight / 4, window.innerHeight / -4, -5000, 10000);
     cameraBEV.up = new THREE.Vector3(0, 0, -1);
@@ -2463,7 +2487,7 @@ function initFrontView() {
     canvasFrontView.height = getSideViewHeight();
 
     $("body").append(canvasFrontView);
-    $("#canvasFrontView").css("top", (canvasFrontView.height - 4) + 'px');
+    $("#canvasFrontView").css("top", (canvasFrontView.height + getSideViewHeader()) + 'px');
     cameraFrontView = new THREE.OrthographicCamera(window.innerWidth / -4, window.innerWidth / 4, window.innerHeight / 4, window.innerHeight / -4, -5000, 10000);
     cameraFrontView.lookAt(new THREE.Vector3(0, 0, -1));
     scene.add(cameraFrontView);
@@ -2473,7 +2497,7 @@ function updateFrontView() {
     let imagePanelTopPos = parseInt($("#layout_layout_resizer_top").css("top"), 10);
     let panelTopPos = imagePanelTopPos + headerHeight + 270;
     canvasFrontView.left = "0px";
-    canvasFrontView.top = panelTopPos;
+    canvasFrontView.top = (getSideViewHeight() + getSideViewHeader()) + 'px';
     if (rendererFrontView === undefined) {
         rendererFrontView = new THREE.WebGLRenderer({
             antialias: true
@@ -2492,13 +2516,20 @@ function showFrontView() {
     $("#canvasFrontView").show();
 }
 
+const getSideViewHeader = (radix) => {
+    if(radix === undefined) radix = 10;
+    let size = parseInt($("#layout_layout_resizer_top").css("top"), radix)
+    let response = isNaN(size) ? 0 : size;
+    return response;
+};
+
 function getSideViewHeight(radix){
     if(radix === undefined) radix = 10;
-    let imagePaneHeight = parseInt($("#layout_layout_resizer_top").css("top"), radix);
+    let imagePaneHeight = getSideViewHeader(radix);
     if(imagePaneHeight === undefined || isNaN(imagePaneHeight)){
-        imagePaneHeight = window.innerHeight / 3;
+        imagePaneHeight = 0;
     }
-    return imagePaneHeight;
+    return (window.innerHeight - imagePaneHeight)  / 3;
 }
 function initSideView() {
     canvasSideView = document.createElement("canvas");
@@ -2506,8 +2537,10 @@ function initSideView() {
     canvasSideView.style.borderBottom = '1px solid white'
     canvasSideView.style.borderRight = '1px solid white'
     canvasSideView.width = window.innerWidth / 3;
-    canvasSideView.height = (getSideViewHeight() + 5);
+    canvasSideView.height = getSideViewHeight();
+    canvasSideView.top = getSideViewHeader() + 'px';
     $("body").append(canvasSideView);
+    $("#canvasSideView").css("top", getSideViewHeader() + 'px');
 
     cameraSideView = new THREE.OrthographicCamera(window.innerWidth / -4, window.innerWidth / 4, window.innerHeight / 4, window.innerHeight / -4, -5000, 10000);
     cameraSideView.lookAt(new THREE.Vector3(1, 0, 0));
@@ -2520,7 +2553,7 @@ function updateSideView() {
     let imagePaneHeight = parseInt($("#layout_layout_resizer_top").css("top"), 10);
     let panelTopPos = headerHeight + imagePaneHeight;
     canvasSideView.left = "0px";
-    canvasSideView.top = panelTopPos;
+    canvasSideView.top = getSideViewHeader() + 'px';
 }
 
 function showSideView() {
@@ -2529,7 +2562,6 @@ function showSideView() {
     }
     updateSideView();
     $("#canvasSideView").show();
-
 }
 
 function showHelperViews(xPos, yPos, zPos) {
@@ -2565,6 +2597,7 @@ function mouseUpLogic(ev) {
             useTransformControls = true;
         }
     }
+    console.log("")
     // Mouse 왼쪽 버튼을 클릭하였을 경우.
     if (ev.button === 0) {
         let rect = ev.target.getBoundingClientRect();
@@ -2711,8 +2744,6 @@ function mouseUpLogic(ev) {
             classPickerElem.css('background-color', '#353535');
             $(classPickerElem[classesBoundingBox[obj["class"]].index]).css('background-color', '#525252');
             classesBoundingBox.currentClass = obj["class"];
-
-
         } else {
             /**
              * Panel 신규 생성 MouseUp Event
@@ -3442,7 +3473,7 @@ function init() {
         // 3D BB controls
         guiOptions.add(parameters, 'refresh').name("Refresh App");
         guiOptions.add(parameters, 'download').name("Save Data");
-        guiOptions.add(parameters, 'download_video').name("Create and Download Video");
+        // guiOptions.add(parameters, 'download_video').name("Create and Download Video");
         guiOptions.add(parameters, 'undo').name("Undo");
         guiOptions.add(parameters, 'views', ['perspective', 'orthographic']).name("Select View").onChange(function (value) {
             if (transformControls !== undefined) {
@@ -3474,17 +3505,17 @@ function init() {
             pointCloudScanMap[labelTool.currentFileIndex].material.size = pointSizeCurrent;
         });
         disablePointSizeSlider();
-        let showOriginalNuScenesLabelsCheckbox = guiOptions.add(parameters, 'show_nuscenes_labels').name('NuScenes Labels').listen();
-        showOriginalNuScenesLabelsCheckbox.onChange(function (value) {
-            labelTool.showOriginalNuScenesLabels = value;
-            if (labelTool.showOriginalNuScenesLabels === true) {
-                labelTool.reset();
-                labelTool.start();
-            } else {
-                labelTool.reset();
-                labelTool.start();
-            }
-        });
+        // let showOriginalNuScenesLabelsCheckbox = guiOptions.add(parameters, 'show_nuscenes_labels').name('NuScenes Labels').listen();
+        // showOriginalNuScenesLabelsCheckbox.onChange(function (value) {
+        //     labelTool.showOriginalNuScenesLabels = value;
+        //     if (labelTool.showOriginalNuScenesLabels === true) {
+        //         labelTool.reset();
+        //         labelTool.start();
+        //     } else {
+        //         labelTool.reset();
+        //         labelTool.start();
+        //     }
+        // });
         let allCheckboxes = $(":checkbox");
         let showNuScenesLabelsCheckbox = allCheckboxes[0];
         if (labelTool.currentDataset === labelTool.datasets.NuScenes) {
@@ -3532,53 +3563,53 @@ function init() {
             }
         });
 
-        if (labelTool.pointCloudOnlyAnnotation === false) {
-            let showProjectedPointsCheckbox = guiOptions.add(parameters, 'show_projected_points').name('Show projected points').listen();
-            showProjectedPointsCheckbox.onChange(function (value) {
-                showProjectedPointsFlag = value;
-                if (showProjectedPointsFlag === true) {
-                    showProjectedPoints();
-                } else {
-                    hideProjectedPoints();
-                }
-            });
-        }
+        // if (labelTool.pointCloudOnlyAnnotation === false) {
+        //     let showProjectedPointsCheckbox = guiOptions.add(parameters, 'show_projected_points').name('Show projected points').listen();
+        //     showProjectedPointsCheckbox.onChange(function (value) {
+        //         showProjectedPointsFlag = value;
+        //         if (showProjectedPointsFlag === true) {
+        //             showProjectedPoints();
+        //         } else {
+        //             hideProjectedPoints();
+        //         }
+        //     });
+        // }
 
-        let showProjectedPointsCheckbox = guiOptions.add(parameters, 'show_projected_points').name('Show projected points').listen();
-        showProjectedPointsCheckbox.onChange(function (value) {
-            showProjectedPointsFlag = value;
-            //let grid = scene.getObjectByName("grid");
-            if (showProjectedPointsFlag === true) {
-                showProjectedPoints();
-            } else {
-                hideProjectedPoints();
-            }
-        });
+        // let showProjectedPointsCheckbox = guiOptions.add(parameters, 'show_projected_points').name('Show projected points').listen();
+        // showProjectedPointsCheckbox.onChange(function (value) {
+        //     showProjectedPointsFlag = value;
+        //     //let grid = scene.getObjectByName("grid");
+        //     if (showProjectedPointsFlag === true) {
+        //         showProjectedPoints();
+        //     } else {
+        //         hideProjectedPoints();
+        //     }
+        // });
 
-        let showGridCheckbox = guiOptions.add(parameters, 'show_grid').name('Show grid').listen();
-        showGridCheckbox.onChange(function (value) {
-            showGridFlag = value;
-            //let grid = scene.getObjectByName("grid");
-            if (grid === undefined || grid.parent === null) {
-                createGrid();
-            }
-            if (showGridFlag === true) {
-                grid.visible = true;
-            } else {
-                grid.visible = false;
-            }
-        });
-        let filterGroundCheckbox = guiOptions.add(parameters, 'filter_ground').name('Filter ground').listen();
-        filterGroundCheckbox.onChange(function (value) {
-            filterGround = value;
-            if (filterGround === true) {
-                labelTool.removeObject("pointcloud-scan-" + labelTool.currentFileIndex);
-                addObject(pointCloudScanNoGroundList[labelTool.currentFileIndex], "pointcloud-scan-no-ground-" + labelTool.currentFileIndex);
-            } else {
-                labelTool.removeObject("pointcloud-scan-no-ground-" + labelTool.currentFileIndex);
-                addObject(pointCloudScanMap[labelTool.currentFileIndex], "pointcloud-scan-" + labelTool.currentFileIndex);
-            }
-        });
+        // let showGridCheckbox = guiOptions.add(parameters, 'show_grid').name('Show grid').listen();
+        // showGridCheckbox.onChange(function (value) {
+        //     showGridFlag = value;
+        //     //let grid = scene.getObjectByName("grid");
+        //     if (grid === undefined || grid.parent === null) {
+        //         createGrid();
+        //     }
+        //     if (showGridFlag === true) {
+        //         grid.visible = true;
+        //     } else {
+        //         grid.visible = false;
+        //     }
+        // });
+        // let filterGroundCheckbox = guiOptions.add(parameters, 'filter_ground').name('Filter ground').listen();
+        // filterGroundCheckbox.onChange(function (value) {
+        //     filterGround = value;
+        //     if (filterGround === true) {
+        //         labelTool.removeObject("pointcloud-scan-" + labelTool.currentFileIndex);
+        //         addObject(pointCloudScanNoGroundList[labelTool.currentFileIndex], "pointcloud-scan-no-ground-" + labelTool.currentFileIndex);
+        //     } else {
+        //         labelTool.removeObject("pointcloud-scan-no-ground-" + labelTool.currentFileIndex);
+        //         addObject(pointCloudScanMap[labelTool.currentFileIndex], "pointcloud-scan-" + labelTool.currentFileIndex);
+        //     }
+        // });
 
         let hideOtherAnnotationsCheckbox = guiOptions.add(parameters, 'hide_other_annotations').name('Hide other annotations').listen();
         hideOtherAnnotationsCheckbox.onChange(function (value) {

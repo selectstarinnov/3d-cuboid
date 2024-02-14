@@ -256,46 +256,27 @@ let labelTool = {
     },
 
     localOnInitialize: {
-        "CAM_FRONT_LEFT":
+        "CAM_FRONT_LEFT": function () {
 
-            function () {
-            }
+        },
+        "CAM_FRONT": function () {
 
-        ,
-        "CAM_FRONT":
+        },
+        "CAM_FRONT_RIGHT": function () {
 
-            function () {
-            }
+        },
+        "CAM_BACK_RIGHT": function () {
 
-        ,
-        "CAM_FRONT_RIGHT":
+        },
+        "CAM_BACK": function () {
 
-            function () {
-            }
+        },
+        "CAM_BACK_LEFT": function () {
 
-        ,
-        "CAM_BACK_RIGHT":
+        },
+        "PCD": function () {
 
-            function () {
-            }
-
-        ,
-        "CAM_BACK":
-
-            function () {
-            }
-
-        ,
-        "CAM_BACK_LEFT":
-
-            function () {
-            }
-
-        ,
-        "PCD":
-
-            function () {
-            }
+        }
     }, loadImageData: function () {
         if (labelTool.cameraImagesLoaded === false) {
             for (let i = 0; i < this.numFrames; i++) {
@@ -464,6 +445,11 @@ let labelTool = {
             if (frameAnnotations.hasOwnProperty(annotationIdx)) {
                 let annotation = frameAnnotations[annotationIdx];
                 let params = getDefaultObject();
+                if(annotation['occlusion'] === undefined || (annotation['occlusion'] < 0 || annotation['occlusion'] > 2)){
+                    params['occlusion'] = 0
+                }else{
+                    params['occlusion'] = annotation.occlusion;
+                }
                 params.class = annotation.category;
                 params.rotationYaw = parseFloat(annotation.box3d.orientation.rotationYaw);
                 params.original.rotationYaw = parseFloat(annotation.box3d.orientation.rotationYaw);
@@ -608,6 +594,7 @@ let labelTool = {
                     let annotationObjectJSON = {
                         "id": annotationObj["trackId"],
                         "category": annotationObj["class"],
+                        "occlusion": annotationObj['occlusion'] === undefined ? 0 : annotationObj['occlusion'],
                         "box3d": {
                             "dimension": {
                                 "width": this.cubeArray[j][i].scale.x,
@@ -828,7 +815,8 @@ let labelTool = {
 
                     }
                 }
-                paperArray.push(Raphael(canvasArray[channelIdx], imageWidth, imagePanelTopPos));
+                const raphael = Raphael(canvasArray[channelIdx], imageWidth, imagePanelTopPos);
+                paperArray.push(raphael);
             }
             labelTool.imageCanvasInitialized = true;
             paperArrayAll.push(paperArray);
@@ -840,7 +828,13 @@ let labelTool = {
         $("#layout_layout_panel_top .w2ui-panel-content").css("overflow", "scroll");
 
         this.camChannels.forEach(function (channelObj) {
-            this.localOnInitialize[channelObj.channel]();
+
+            /**
+             * func() 함수를 호출할 경우, 오류가 발생 svg 관련
+             * 하지만 현재 수행되는 내용이 없어서 주석처리 함.
+             */
+            // const func = this.localOnInitialize[channelObj.channel];
+            // func();
         }.bind(this));
 
         if (labelTool.currentDataset === labelTool.datasets.NuScenes) {
@@ -1060,7 +1054,6 @@ let labelTool = {
         xhr.send();
         if (xhr.status !== 200) {
             alert('class 정보를 읽어오는데 문제가 생겼습니다.')
-
         }
         var response = JSON.parse(xhr.responseText); // 서버에서 받은 응답 데이터
         let classes = response.classes.map(elm => elm.key)

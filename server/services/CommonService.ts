@@ -27,7 +27,6 @@ const configSetting = () => {
 
                 }
                 item['sequences'] = sequence;
-                console.log("sequence", sequence)
                 if(sequence.length > 0){
                     response = [
                         ...response,
