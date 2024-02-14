@@ -15,7 +15,6 @@ fs.writeFile("jet.json", json_text, function (err) {
     if (err) {
         return console.log(err);
     }
-    console.log("The file was saved!");
 });
 },{"colormap":3,"fs":5}],2:[function(require,module,exports){
 module.exports={

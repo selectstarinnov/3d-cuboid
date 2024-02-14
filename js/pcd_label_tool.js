@@ -967,7 +967,7 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
 
 
     // let currentDatasetDropDownController = guiOptions.add(labelTool, 'currentDataset', labelTool.datasetArray).name("Choose dataset")
-    let folderOcclusion = folderBoundingBox3DArray[insertIndex].addFolder('Occlusionss');
+    let folderOcclusion = folderBoundingBox3DArray[insertIndex].addFolder('Occlusion');
     let occlusion = folderOcclusion.add(bbox, 'occlusion', {
         [occlusionType[0]]: 0,
         [occlusionType[1]]: 1,
@@ -1061,7 +1061,7 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
 
     function changeOcclusion(value){
         let selectionIndex = getObjectIndexByTrackIdAndClass(bbox.trackId, bbox.class, labelTool.currentFileIndex);
-        labelTool.cubeArray[labelTool.currentFileIndex][selectionIndex].rotation[''] = value;
+        // labelTool.cubeArray[labelTool.currentFileIndex][selectionIndex].rotation[''] = value;
         annotationObjects.contents[labelTool.currentFileIndex][selectionIndex]['occlusion'] = value;
     }
 
@@ -1866,7 +1866,6 @@ function setPerspectiveView() {
     if (keyboardNavigation === true) {
         setPointerLockControls();
     } else {
-        console.log("setOrbitControls")
         setOrbitControls();
     }
     // TODO: enable to fly through the 3d scene using keys
@@ -2597,7 +2596,6 @@ function mouseUpLogic(ev) {
             useTransformControls = true;
         }
     }
-    console.log("")
     // Mouse 왼쪽 버튼을 클릭하였을 경우.
     if (ev.button === 0) {
         let rect = ev.target.getBoundingClientRect();
@@ -2863,6 +2861,7 @@ function mouseUpLogic(ev) {
                 addBboxParameters.rotationYaw = 0;
                 addBboxParameters.rotationPitch = 0;
                 addBboxParameters.rotationRoll = 0;
+                addBboxParameters.occlusion = 0;
                 addBboxParameters.original = {
                     class: classesBoundingBox.getCurrentClass(),
                     x: (groundPointMouseUp.x + groundPointMouseDown.x) / 2,

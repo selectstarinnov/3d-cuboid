@@ -51,7 +51,6 @@ function bakLoadConfigFile(fileName) {
         return jsonObject;
     } else {
         // file not found
-        console.log("config file not found.");
     }
 
 }

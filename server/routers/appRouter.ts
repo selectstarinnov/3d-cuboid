@@ -28,7 +28,6 @@ const appRouter = (app) => {
     app.get("/frames", (req, res) => {
         const {dataset, sequence} = req.query;
         const path = `${dirname}/input/${dataset}/${sequence}/pointclouds`;
-        console.log("path", path)
         let dir = fs.readdirSync(path);
         let fileCount = 0;
         dir.forEach(item => {

@@ -1762,7 +1762,6 @@ function remove2DBoundingBoxes() {
             for (let k = 0; k < annotationObjects.contents[labelTool.currentFileIndex][i].channels[j].lines.length; k++) {
                 let line = annotationObjects.contents[labelTool.currentFileIndex][i].channels[j].lines[k];
                 if (line !== undefined) {
-                    console.log("remove");
                     line.remove();
                 }
             }
