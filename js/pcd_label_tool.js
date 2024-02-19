@@ -965,17 +965,6 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
         maxZPos = 3;
     }
 
-
-    // let currentDatasetDropDownController = guiOptions.add(labelTool, 'currentDataset', labelTool.datasetArray).name("Choose dataset")
-    let folderOcclusion = folderBoundingBox3DArray[insertIndex].addFolder('Occlusion');
-    let occlusion = folderOcclusion.add(bbox, 'occlusion', {
-        [occlusionType[0]]: 0,
-        [occlusionType[1]]: 1,
-        [occlusionType[2]]: 2,
-    }).listen();
-    folderOcclusion.open();
-    folderPositionArray.push(folderOcclusion);
-
     let folderPosition = folderBoundingBox3DArray[insertIndex].addFolder('Position');
     let cubeX = folderPosition.add(bbox, 'x').name("x").min(minXPos).max(maxXPos).step(0.01).listen();
     let cubeY = folderPosition.add(bbox, 'y').name("y").min(minYPos).max(maxYPos).step(0.01).listen();
@@ -1005,6 +994,18 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
     folderSize.close();
     folderSizeArray.push(folderSize);
 
+    let folderOcclusion = folderBoundingBox3DArray[insertIndex].addFolder('Occlusion');
+    let occlusion = folderOcclusion.add(bbox, 'occlusion', {
+        [occlusionType[0]]: 0,
+        [occlusionType[1]]: 1,
+        [occlusionType[2]]: 2,
+    }).listen();
+    folderOcclusion.open();
+    folderPositionArray.push(folderOcclusion);
+    occlusion.onChange(val => {
+        changeOcclusion(val)
+    })
+
     function changeCubePosition(type, value){
         // Note: Do not use insertIndex because it might change (if deleting e.g. an object in between)
         // use track id and class to calculate selection index
@@ -1032,10 +1033,6 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
             annotationObjects.contents[labelTool.currentFileIndex][selectionIndex][prevParam] = value;
         }
     }
-
-    occlusion.onChange(val => {
-        changeOcclusion(val)
-    })
 
     cubeX.onChange(function (value) {
         if (value >= minXPos && value < maxXPos) {
@@ -1163,7 +1160,7 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
                     return;
                 }
                 /**
-                 * ## 아래 코드는 position.x 와 position.y 값도 함께 변경시키는 코드. 현재 주석처리
+                 * ## 아래 코드는 position.x 와 position.y 값도 함께 변경시키는 코드.
                  */
                 if(type === 'width'){
                     let newXPos = labelTool.cubeArray[i][selectionIndex].position.x + (value - labelTool.cubeArray[i][selectionIndex].scale.x) * Math.cos(labelTool.cubeArray[i][selectionIndex].rotation.z) / 2;

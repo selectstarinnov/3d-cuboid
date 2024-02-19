@@ -124,7 +124,7 @@ let annotationObjects = {
         // update class of folder and track id instead of creating new folder
         folderBoundingBox3DArray[selectedObjectIndex].domElement.children[0].children[0].innerHTML = newClassLabel + ' ' + nextTrackIdNewClass;
         //                                                           ul        number      div       div[class c]    input
-        folderBoundingBox3DArray[selectedObjectIndex].domElement.children[0].children[4].children[0].children[1].children[0].value = nextTrackIdNewClass;
+        folderBoundingBox3DArray[selectedObjectIndex].domElement.children[0].children[5].children[0].children[1].children[0].value = nextTrackIdNewClass;
 
         guiOptions.__folders[newClassLabel + ' ' + nextTrackIdNewClass] = guiOptions.__folders[currentClassLabel + ' ' + currentTrackId];
         delete guiOptions.__folders[currentClassLabel + ' ' + currentTrackId];
