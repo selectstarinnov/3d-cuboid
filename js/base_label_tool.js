@@ -1393,8 +1393,12 @@ let labelTool = {
                 rotationPitch: parseFloat(annotationObj["rotationPitch"]),
                 rotationRoll: parseFloat(annotationObj["rotationRoll"]),
                 trackId: annotationObj["trackId"],
-                copyLabelToNextFrame: copyFlag
+                copyLabelToNextFrame: copyFlag,
+                occlusion: annotationObj["occlusion"],
             };
+            if(bbox["occlusion"] === undefined){
+                bbox['occlusion'] = 0;
+            }
             // add bboxEnd for selected object
             if (selectionIndexNextFile === i && interpolationMode === true) {
                 addBoundingBoxGui(bbox, bboxEndParams);

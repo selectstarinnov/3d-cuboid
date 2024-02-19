@@ -994,7 +994,7 @@ function addBoundingBoxGui(bbox, bboxEndParams) {
     folderSize.close();
     folderSizeArray.push(folderSize);
 
-    let folderOcclusion = folderBoundingBox3DArray[insertIndex].addFolder('Occlusion');
+    let folderOcclusion = folderBoundingBox3DArray[insertIndex].addFolder('Occlusion Data');
     let occlusion = folderOcclusion.add(bbox, 'occlusion', {
         [occlusionType[0]]: 0,
         [occlusionType[1]]: 1,
