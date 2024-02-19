@@ -60,7 +60,7 @@ const classes = [
         color: "#D1D5D8"
     },
     {
-        key: "PEDESTRIAN.KID.STTING",
+        key: "PEDESTRIAN.KID.SITTING",
         color: "#CC4846"
     },
     {
