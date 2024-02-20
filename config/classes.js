@@ -100,10 +100,6 @@ const classes = [
         color: "#28324E"
     },
     {
-        key: "ANIMAL.QUADRUPEDAL",
-        color: "#6ABB72"
-    },
-    {
         key: "UNKNOWN_VEHILCE",
         color: "#37DB96"
     },
