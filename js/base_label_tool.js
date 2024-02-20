@@ -491,6 +491,19 @@ let labelTool = {
                     params.original.width = tmpWidth;
                     params.original.length = tmpLength;
                     params.original.height = tmpHeight;
+                }else {
+                    tmpWidth = Math.max(tmpWidth, 0.01);
+                    tmpLength = Math.max(tmpLength, 0.01);
+                    tmpHeight = Math.max(tmpHeight, 0.01);
+                    params.delta_x = 0;
+                    params.delta_y = 0;
+                    params.delta_z = 0;
+                    params.width = tmpWidth;
+                    params.length = tmpLength;
+                    params.height = tmpHeight;
+                    params.original.width = tmpWidth;
+                    params.original.length = tmpLength;
+                    params.original.height = tmpHeight;
                 }
                 params.fileIndex = Number(frameObject.index);
                 // add new entry to contents array
